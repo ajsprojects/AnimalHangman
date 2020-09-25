@@ -1,20 +1,18 @@
 ﻿using System;
 using System.Text;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Dynamic;
+using System.IO;
+using System.Reflection;
 
 namespace Hangman
 {
     public static class Program
     {
-        static int lives = 9;
+        private static int _lives = 9;
         static void Main(string[] args)
         {
             Console.WriteLine("Welcome to Animal Hangman by ajsprojects!");
-            var wordsToGuess = new List<string>() { "bird", "dog", "rabbit", "otter", "penguin", "mouse", "giraffe", "panda", "tiger", "squirrel",
-                "elephant", "lion", "anteater", "bobcat", "horse", "chimpanzee", "goose", "caterpillar", "kangaroo", "moose", "meercat"};
+            var wordsToGuess = LoadWordsFromFile();
             Random rnd = new Random();
             int attempts = 0;
             var chosenWord = wordsToGuess[rnd.Next(0, wordsToGuess.Count)];
@@ -22,9 +20,17 @@ namespace Hangman
             StringBuilder chosenWordCopy = new StringBuilder(length);
 
             for (int i = 0; i < chosenWord.Length; i++)
-                chosenWordCopy.Append('_');
-
-            //Console.WriteLine(chosenWord + " , length: " + length);
+            {
+                if (chosenWord[i] != ' ')
+                {
+                    chosenWordCopy.Append('_');
+                }
+                else
+                {
+                    chosenWordCopy.Append(' ');
+                }
+            } 
+            //Console.WriteLine(chosenWord + ", length: " + length);
             Console.WriteLine("Word: " + chosenWordCopy + " (" + length + ")");
 
             List<char> incorrectLetters = new List<char>();
@@ -32,31 +38,34 @@ namespace Hangman
             string input;
             char letter;
 
-            while (canContinue())
+            while (CanContinue())
             {
                 Console.Write("Enter your letter: ");
                 input = Console.ReadLine().ToLower();
                 letter = input[0];
 
-                if (!isValidInput(letter))
+                if (!IsValidInput(letter))
                     Console.WriteLine("Invalid input!");
 
-                if (!chosenWord.Contains(letter))
+                if (!chosenWord.Contains(letter, System.StringComparison.CurrentCultureIgnoreCase))
                 {
-                    Console.WriteLine(letter + " is not in word!");
+                    Console.WriteLine(letter + " is not in the word");
                     incorrectLetters.Add(letter);
                     attempts += 1;
-                    lives -= 1;
+                    _lives -= 1;
                 }
                 else
                 {
-                    int i = getIndex(letter, chosenWord, chosenWordCopy);
-                    chosenWordCopy.Remove(i, 1);
-                    chosenWordCopy.Insert(i, letter);
-                    Console.WriteLine("Correct guess well done!");
+                    int i = GetIndex(letter, chosenWord, chosenWordCopy);
+                    if (i != -1)
+                    {
+                        chosenWordCopy.Remove(i, 1);
+                        chosenWordCopy.Insert(i, letter);
+                        Console.WriteLine("Correct guess well done!");
+                    }
                 }
 
-                if (chosenWordCopy.Equals(chosenWord))
+                if (String.Equals(chosenWord, chosenWordCopy.ToString(), StringComparison.OrdinalIgnoreCase))
                 {
                     Console.WriteLine("~~~~~~~~~~~~~~~~~~~~~~~");
                     Console.WriteLine("Word: " + chosenWordCopy + " (" + length + ")");
@@ -79,28 +88,30 @@ namespace Hangman
 
         }
 
-        static int getIndex(char letter, string word, StringBuilder copyWord)
+        static int GetIndex(char letter, string word, StringBuilder copyWord)
         {
             for (int i = 0; i < word.Length; i++)
             {
-                if (word[i] == letter && copyWord[i] == '_')
+                char c = word[i];
+                if (Char.ToLower(c) == letter && copyWord[i] == '_')
                 {
                     return i;
                 }
             }
-            return 0;
+            Console.WriteLine("You have already guessed this character!");
+            return -1;
         }
 
-        static bool isValidInput(char c)
+        static bool IsValidInput(char c)
         {
             return Char.IsLetter(c);
         }
 
-        static bool canContinue()
+        static bool CanContinue()
         {
-            if (lives > 0)
+            if (_lives > 0)
             {
-                Console.WriteLine("You have " + lives + " live(s) remaining!");
+                Console.WriteLine("You have " + _lives + " live(s) remaining!");
                 return true;
             }
             else
@@ -110,5 +121,23 @@ namespace Hangman
                 return false;
             }
         }
+
+        static List<string> LoadWordsFromFile() 
+        {
+            var wordsToGuess = new List<string>();
+            var path = Directory.GetParent(Directory.GetParent(Directory.GetParent(Environment.CurrentDirectory).ToString()).ToString());
+            string line;
+            StreamReader file = new System.IO.StreamReader(path + "/Animals.txt");
+            if (path != null)
+            {
+                while ((line = file.ReadLine()) != null)
+                {
+                    wordsToGuess.Add(line);
+                }
+                file.Close();
+            }
+            return wordsToGuess;
+        }
+
     }
 }
