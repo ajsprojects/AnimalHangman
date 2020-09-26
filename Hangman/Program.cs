@@ -10,11 +10,13 @@ namespace Hangman
         private static int _lives;
         private static string _chosenWord;
         private static GameDifficulty _gameDifficulty;
+
         static void Main(string[] args)
         {
             Console.WriteLine("Welcome to Animal Hangman by ajsprojects!");
             SetupGame();
         }
+
         private static void PlayGame()
         {
             int attempts = 0;
@@ -87,6 +89,7 @@ namespace Hangman
             }
             Restart();
         }
+
         private static void Restart()
         {
             Console.WriteLine("Restart game? Press spacebar to restart \n");
@@ -95,6 +98,7 @@ namespace Hangman
                 SetupGame();
             }
         }
+
         private static void SetupGame()
         {
             try
@@ -114,6 +118,7 @@ namespace Hangman
                 SetupGame();
             } 
         }
+
         private static int GetIndex(char letter, string word, StringBuilder copyWord)
         {
             for (int i = 0; i < word.Length; i++)
@@ -127,10 +132,12 @@ namespace Hangman
             Console.WriteLine("You have already guessed this character!");
             return -1;
         }
+
         private static bool IsValidInput(char c)
         {
             return Char.IsLetter(c);
         }
+
         private static bool CanContinue()
         {
             if (_lives > 0)
@@ -145,6 +152,7 @@ namespace Hangman
                 return false;
             }
         }
+
         private static List<string> LoadWordsFromFile() 
         {
             var wordsToGuess = new List<string>();
