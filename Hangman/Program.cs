@@ -2,42 +2,39 @@
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 
 namespace Hangman
 {
     public static class Program
     {
-        private static int _lives = 9;
-        private static string _gameMode = "";
+        private static int _lives;
+        private static string _chosenWord;
+        private static GameDifficulty _gameDifficulty;
         static void Main(string[] args)
         {
             Console.WriteLine("Welcome to Animal Hangman by ajsprojects!");
-            Console.Write("Please type your difficult ('easy','medium','hard'): ");
-            _gameMode = Console.ReadLine().ToLower();
-            Console.WriteLine("Game mode: " + _gameMode);
-            var wordsToGuess = LoadWordsFromFile();
-            Random rnd = new Random();
+            SetupGame();
+        }
+        private static void PlayGame()
+        {
             int attempts = 0;
-            var chosenWord = wordsToGuess[rnd.Next(0, wordsToGuess.Count)];
-            var length = chosenWord.Length;
+            var length = _chosenWord.Length;
             StringBuilder chosenWordCopy = new StringBuilder(length);
 
-            for (int i = 0; i < chosenWord.Length; i++)
+            for (int i = 0; i < _chosenWord.Length; i++)
             {
-                if (chosenWord[i] != ' ')
+                if (_chosenWord[i] != ' ')
                 {
                     chosenWordCopy.Append('_');
-                } else
+                }
+                else
                 {
                     chosenWordCopy.Append(' ');
                 }
-            } 
+            }
             //Console.WriteLine(chosenWord + ", length: " + length);
             Console.WriteLine("Word: " + chosenWordCopy + " (" + length + ")");
-
             List<char> incorrectLetters = new List<char>();
-
             string input;
             char letter;
 
@@ -50,7 +47,7 @@ namespace Hangman
                 if (!IsValidInput(letter))
                     Console.WriteLine("Invalid input!");
 
-                if (!chosenWord.Contains(letter, System.StringComparison.CurrentCultureIgnoreCase))
+                if (!_chosenWord.Contains(letter, StringComparison.CurrentCultureIgnoreCase))
                 {
                     Console.WriteLine(letter + " is not in the word");
                     incorrectLetters.Add(letter);
@@ -59,7 +56,7 @@ namespace Hangman
                 }
                 else
                 {
-                    int i = GetIndex(letter, chosenWord, chosenWordCopy);
+                    int i = GetIndex(letter, _chosenWord, chosenWordCopy);
                     if (i != -1)
                     {
                         chosenWordCopy.Remove(i, 1);
@@ -68,7 +65,7 @@ namespace Hangman
                     }
                 }
 
-                if (String.Equals(chosenWord, chosenWordCopy.ToString(), StringComparison.OrdinalIgnoreCase))
+                if (String.Equals(_chosenWord, chosenWordCopy.ToString(), StringComparison.OrdinalIgnoreCase))
                 {
                     Console.WriteLine("~~~~~~~~~~~~~~~~~~~~~~~");
                     Console.WriteLine("Word: " + chosenWordCopy + " (" + length + ")");
@@ -88,9 +85,36 @@ namespace Hangman
                 Console.WriteLine("\n");
                 Console.WriteLine("Word: " + chosenWordCopy);
             }
-
+            Restart();
         }
-        static int GetIndex(char letter, string word, StringBuilder copyWord)
+        private static void Restart()
+        {
+            Console.WriteLine("Restart game? Press spacebar to restart \n");
+            if(Console.ReadKey(true).Key == ConsoleKey.Spacebar)
+            {
+                SetupGame();
+            }
+        }
+        private static void SetupGame()
+        {
+            try
+            {
+                Console.Write("Please enter your difficulty 1,2,3 (easy = 1, medium = 2, hard = 3): ");
+                int userSelectedDifficulty = Convert.ToInt32(Console.ReadLine());
+                _gameDifficulty = (GameDifficulty) userSelectedDifficulty;
+                SetLives();
+                var wordsToGuess = LoadWordsFromFile();
+                Console.WriteLine("Game mode: " + _gameDifficulty);
+                Random rnd = new Random();
+                _chosenWord = wordsToGuess[rnd.Next(0, wordsToGuess.Count)];
+                PlayGame();
+            } catch
+            {
+                Console.WriteLine("Invalid user difficulty selected! \n");
+                SetupGame();
+            } 
+        }
+        private static int GetIndex(char letter, string word, StringBuilder copyWord)
         {
             for (int i = 0; i < word.Length; i++)
             {
@@ -103,11 +127,11 @@ namespace Hangman
             Console.WriteLine("You have already guessed this character!");
             return -1;
         }
-        static bool IsValidInput(char c)
+        private static bool IsValidInput(char c)
         {
             return Char.IsLetter(c);
         }
-        static bool CanContinue()
+        private static bool CanContinue()
         {
             if (_lives > 0)
             {
@@ -121,23 +145,23 @@ namespace Hangman
                 return false;
             }
         }
-        static List<string> LoadWordsFromFile() 
+        private static List<string> LoadWordsFromFile() 
         {
             var wordsToGuess = new List<string>();
             var path = Directory.GetParent(Directory.GetParent(Directory.GetParent(Environment.CurrentDirectory).ToString()).ToString());
-            StreamReader file = new System.IO.StreamReader(path + "/Animals.txt");
+            StreamReader file = new StreamReader(path + "/Animals.txt");
             string line;
             if (path != null)
             {
                 while ((line = file.ReadLine()) != null)
                 {
-                    if (_gameMode == "easy" && line.Length <= 5)
+                    if (_gameDifficulty == GameDifficulty.Easy && line.Length <= 5)
                     {
                         wordsToGuess.Add(line);
-                    } else if (_gameMode == "medium" && line.Length <= 9)
+                    } else if (_gameDifficulty == GameDifficulty.Medium && line.Length <= 9)
                     {
                         wordsToGuess.Add(line);
-                    } else if (_gameMode == "hard")
+                    } else if (_gameDifficulty == GameDifficulty.Hard && line.Length >= 10)
                     {
                         wordsToGuess.Add(line);
                     }
@@ -147,5 +171,20 @@ namespace Hangman
             return wordsToGuess;
         }
 
+        private static void SetLives()
+        {
+            if (_gameDifficulty == GameDifficulty.Easy)
+            {
+                _lives = 11;
+            }
+            else if (_gameDifficulty == GameDifficulty.Medium)
+            {
+                _lives = 9;
+            }
+            else if (_gameDifficulty == GameDifficulty.Hard)
+            {
+                _lives = 7;
+            }
+        }
     }
 }
