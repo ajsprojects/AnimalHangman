@@ -1,5 +1,5 @@
 /Builds
-**/Hangman/Hangman/bin/
-**/Hangman/Hangman/obj/
-**/Hangman/.vs
+**/Hangman/bin/
+**/Hangman/obj/
+**/.vs
 /.vs 

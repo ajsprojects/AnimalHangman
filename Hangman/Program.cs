@@ -9,9 +9,13 @@ namespace Hangman
     public static class Program
     {
         private static int _lives = 9;
+        private static string _gameMode = "";
         static void Main(string[] args)
         {
             Console.WriteLine("Welcome to Animal Hangman by ajsprojects!");
+            Console.Write("Please type your difficult ('easy','medium','hard'): ");
+            _gameMode = Console.ReadLine().ToLower();
+            Console.WriteLine("Game mode: " + _gameMode);
             var wordsToGuess = LoadWordsFromFile();
             Random rnd = new Random();
             int attempts = 0;
@@ -24,8 +28,7 @@ namespace Hangman
                 if (chosenWord[i] != ' ')
                 {
                     chosenWordCopy.Append('_');
-                }
-                else
+                } else
                 {
                     chosenWordCopy.Append(' ');
                 }
@@ -87,7 +90,6 @@ namespace Hangman
             }
 
         }
-
         static int GetIndex(char letter, string word, StringBuilder copyWord)
         {
             for (int i = 0; i < word.Length; i++)
@@ -101,12 +103,10 @@ namespace Hangman
             Console.WriteLine("You have already guessed this character!");
             return -1;
         }
-
         static bool IsValidInput(char c)
         {
             return Char.IsLetter(c);
         }
-
         static bool CanContinue()
         {
             if (_lives > 0)
@@ -121,18 +121,26 @@ namespace Hangman
                 return false;
             }
         }
-
         static List<string> LoadWordsFromFile() 
         {
             var wordsToGuess = new List<string>();
             var path = Directory.GetParent(Directory.GetParent(Directory.GetParent(Environment.CurrentDirectory).ToString()).ToString());
-            string line;
             StreamReader file = new System.IO.StreamReader(path + "/Animals.txt");
+            string line;
             if (path != null)
             {
                 while ((line = file.ReadLine()) != null)
                 {
-                    wordsToGuess.Add(line);
+                    if (_gameMode == "easy" && line.Length <= 5)
+                    {
+                        wordsToGuess.Add(line);
+                    } else if (_gameMode == "medium" && line.Length <= 9)
+                    {
+                        wordsToGuess.Add(line);
+                    } else if (_gameMode == "hard")
+                    {
+                        wordsToGuess.Add(line);
+                    }
                 }
                 file.Close();
             }
